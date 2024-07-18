@@ -1,84 +1,99 @@
 <script setup>
 import { ref } from 'vue'
 import axios from 'axios'
-
+import Paginate from 'vuejs-paginate-next'
 const dataArray = ref([])
+const showData = ref([])
 const searchData = ref([])
-const isSearchShow = ref(true)
-
 const searchStr = ref('')
+const pages = ref(10)
+const current = ref(1)
 
+//取得api資料
 axios
   .get('https://tcgbusfs.blob.core.windows.net/dotapp/youbike/v2/youbike_immediate.json')
   .then(function (res) {
-    // dataArray.value.push(res.data[1000].total)
-
     for (let i = 0; i < res.data.length; i++) {
       dataArray.value.push(res.data[i])
     }
-    console.log(dataArray.value)
+    for (let i = 0; i < 20; i++) {
+      showData.value.push(dataArray.value[i])
+    }
+
+    pages.value = Math.ceil(dataArray.value.length / 20)
   })
   .catch(function (error) {
     console.log(error)
   })
 
 function totalSort() {
-  if (searchStr.value == null || searchStr.value == '') {
-    if (dataArray.value[0].total > dataArray.value[1].total) {
-      //小到大
-      dataArray.value.sort((a, b) => a.total - b.total)
-    } else {
-      //大到小
-      dataArray.value.sort((a, b) => b.total - a.total)
-    }
+  if (showData.value[0].total > showData.value[1].total) {
+    //小到大
+    showData.value.sort((a, b) => a.total - b.total)
   } else {
-    if (searchData.value[0].total > searchData.value[1].total) {
-      //小到大
-      searchData.value.sort((a, b) => a.total - b.total)
-    } else {
-      //大到小
-      searchData.value.sort((a, b) => b.total - a.total)
-    }
+    //大到小
+    showData.value.sort((a, b) => b.total - a.total)
   }
 }
 
 function vailableRentBikesSort() {
-  if (searchStr.value == null || searchStr.value == '') {
-    if (dataArray.value[0].available_rent_bikes > dataArray.value[1].available_rent_bikes) {
-      //小到大
-      dataArray.value.sort((a, b) => a.available_rent_bikes - b.available_rent_bikes)
-    } else {
-      //大到小
-      dataArray.value.sort((a, b) => b.available_rent_bikes - a.available_rent_bikes)
-    }
+  if (showData.value[0].available_rent_bikes > showData.value[1].available_rent_bikes) {
+    //小到大
+    showData.value.sort((a, b) => a.available_rent_bikes - b.available_rent_bikes)
   } else {
-    if (searchData.value[0].available_rent_bikes > searchData.value[1].available_rent_bikes) {
-      //小到大
-      searchData.value.sort((a, b) => a.available_rent_bikes - b.available_rent_bikes)
-    } else {
-      //大到小
-      searchData.value.sort((a, b) => b.available_rent_bikes - a.available_rent_bikes)
-    }
+    //大到小
+    showData.value.sort((a, b) => b.available_rent_bikes - a.available_rent_bikes)
   }
 }
 
 function doSearch() {
+  showData.value = []
   if (searchStr.value == null || searchStr.value == '') {
-    isSearchShow.value = true
+    showData.value = dataArray.value
+    pages.value = Math.ceil(showData.value.length / 20)
+  } else {
+    for (let i = 0; i < dataArray.value.length; i++) {
+      if (dataArray.value[i].ar.includes(searchStr.value)) {
+        searchData.value.push(dataArray.value[i])
+      }
+    }
+    pages.value = Math.ceil(searchData.value.length / 20)
+    for (let i = 0; i < 20; i++) {
+      showData.value.push(searchData.value[i])
+    }
   }
-  searchData.value = []
-  isSearchShow.value = false
-  for (let i = 0; i < dataArray.value.length; i++) {
-    if (dataArray.value[i].ar.includes(searchStr.value)) {
-      searchData.value.push(dataArray.value[i])
+}
+function doChangePage() {
+  showData.value = []
+  const prevIndex = 20 + (current.value - 2) * 20
+  const index = 20 + (current.value - 1) * 20
+  //判斷是否有搜尋條件，選擇要抓searchData還是dataArray
+  if (searchStr.value == null || searchStr.value == '') {
+    for (let i = prevIndex; i < index; i++) {
+      showData.value.push(dataArray.value[i])
+    }
+  } else {
+    for (let i = prevIndex; i < index; i++) {
+      showData.value.push(searchData.value[i])
     }
   }
 }
 </script>
 
 <template>
-  <!-- <Pagination page-count="10" page-range="1" init-page="1" margin-pages="2"> </Pagination> -->
-  <div class="input-group input-group-sm mb-1" style="margin: 50px">
+  <Paginate
+    class="justify-content-center"
+    first-button-text="&lt;&lt;"
+    last-button-text="&gt;&gt;"
+    prev-text="&lt;"
+    next-text="&gt;"
+    :page-count="pages"
+    :initial-page="current"
+    v-model="current"
+    :click-handler="doChangePage"
+    :first-last-button="true"
+  ></Paginate>
+  <div class="input-group input-group-sm mb-1" style="padding: 1%">
     <span class="input-group-text" id="inputGroup-sizing-sm">搜尋</span>
     <input
       v-model="searchStr"
@@ -87,8 +102,9 @@ function doSearch() {
       aria-label="Sizing example input"
       aria-describedby="inputGroup-sizing-sm"
     />
+    <button @click="doSearch">search</button>
   </div>
-  <button @click="doSearch">search</button>
+
   <table class="table table-hover">
     <thead>
       <tr class="table-primary">
@@ -104,18 +120,7 @@ function doSearch() {
       </tr>
     </thead>
     <tbody>
-      <tr v-for="data in dataArray" :key="data" v-show="isSearchShow">
-        <th scope="row">{{ data.sno }}</th>
-        <td>{{ data.sna }}</td>
-        <td>{{ data.sarea }}</td>
-        <td>{{ data.ar }}</td>
-        <td>{{ data.total }}</td>
-        <td>{{ data.available_rent_bikes }}</td>
-        <td>{{ data.latitude }}</td>
-        <td>{{ data.longitude }}</td>
-        <td>{{ data.available_return_bikes }}</td>
-      </tr>
-      <tr v-for="data in searchData" :key="data" v-show="!isSearchShow">
+      <tr v-for="data in showData" :key="data">
         <th scope="row">{{ data.sno }}</th>
         <td>{{ data.sna }}</td>
         <td>{{ data.sarea }}</td>
