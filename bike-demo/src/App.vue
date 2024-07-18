@@ -8,6 +8,8 @@ const searchData = ref([])
 const searchStr = ref('')
 const pages = ref(10)
 const current = ref(1)
+const sortStr = ref('無排序')
+const sortStr2 = ref('無排序')
 
 //取得api資料
 axios
@@ -30,9 +32,13 @@ function totalSort() {
   if (showData.value[0].total > showData.value[1].total) {
     //小到大
     showData.value.sort((a, b) => a.total - b.total)
+    sortStr.value = '由小到大'
+    sortStr2.value = '無排序'
   } else {
     //大到小
     showData.value.sort((a, b) => b.total - a.total)
+    sortStr.value = '由大到小'
+    sortStr2.value = '無排序'
   }
 }
 
@@ -40,13 +46,19 @@ function vailableRentBikesSort() {
   if (showData.value[0].available_rent_bikes > showData.value[1].available_rent_bikes) {
     //小到大
     showData.value.sort((a, b) => a.available_rent_bikes - b.available_rent_bikes)
+    sortStr2.value = '由小到大'
+    sortStr.value = '無排序'
   } else {
     //大到小
     showData.value.sort((a, b) => b.available_rent_bikes - a.available_rent_bikes)
+    sortStr2.value = '由大到小'
+    sortStr.value = '無排序'
   }
 }
 
 function doSearch() {
+  sortStr2.value = '無排序'
+  sortStr.value = '無排序'
   current.value = 1
   showData.value = []
   searchData.value = []
@@ -111,6 +123,8 @@ function doSearch() {
   }
 }
 function doChangePage() {
+  sortStr2.value = '無排序'
+  sortStr.value = '無排序'
   showData.value = []
   const prevIndex = 20 + (current.value - 2) * 20
   const index = 20 + (current.value - 1) * 20
@@ -172,8 +186,12 @@ function doChangePage() {
           <th scope="col">站點名稱</th>
           <th scope="col">站點所在區域</th>
           <th scope="col">站點地址</th>
-          <th @click="totalSort" scope="col">總車位數量(排序)</th>
-          <th @click="vailableRentBikesSort" scope="col">可租借的腳踏車數量(排序)</th>
+          <th @click="totalSort" scope="col">
+            總車位數量 <span>{{ sortStr }}</span>
+          </th>
+          <th @click="vailableRentBikesSort" scope="col">
+            可租借的腳踏車數量 <span>{{ sortStr2 }}</span>
+          </th>
           <th scope="col">站點緯度</th>
           <th scope="col">站點經度</th>
           <th scope="col">可歸還的腳踏車數量</th>
