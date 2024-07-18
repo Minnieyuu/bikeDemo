@@ -50,22 +50,50 @@ function doSearch() {
   current.value = 1
   showData.value = []
   searchData.value = []
+
   if (searchStr.value == null || searchStr.value == '') {
+    console.log(showData.value)
+    console.log(searchData.value)
     showData.value = dataArray.value
+
     pages.value = Math.ceil(showData.value.length / 20)
     doChangePage()
   } else {
     for (let i = 0; i < dataArray.value.length; i++) {
       if (dataArray.value[i].ar.includes(searchStr.value)) {
+        console.log(dataArray.value[i])
         searchData.value.push(dataArray.value[i])
       }
     }
-    console.log(searchData.value.length)
+
+    for (let i = 0; i < searchData.value.length; i++) {
+      let idx = searchData.value[i].ar.indexOf(searchStr.value)
+      let Redstr = searchData.value[i].ar.substr(idx, searchStr.value.length)
+      let frontStr = searchData.value[i].ar.substr(0, idx)
+      let backStr = searchData.value[i].ar.substr(
+        idx + searchStr.value.length,
+        searchData.value[i].ar.length
+      )
+      let str =
+        '<span>' +
+        frontStr +
+        '</span>' +
+        ' <span style="color:	#FF0000">' +
+        Redstr +
+        '</span>' +
+        '<span>' +
+        backStr +
+        '</span>'
+
+      searchData.value[i].ar = str
+    }
     pages.value = Math.ceil(searchData.value.length / 20)
+
     for (let i = 0; i < 20; i++) {
       if (i >= searchData.value.length) {
         break
       }
+
       showData.value.push(searchData.value[i])
     }
   }
@@ -142,7 +170,7 @@ function doChangePage() {
           <th scope="row">{{ data.sno }}</th>
           <td>{{ data.sna }}</td>
           <td>{{ data.sarea }}</td>
-          <td>{{ data.ar }}</td>
+          <td v-html="data.ar"></td>
           <td>{{ data.total }}</td>
           <td>{{ data.available_rent_bikes }}</td>
           <td>{{ data.latitude }}</td>
