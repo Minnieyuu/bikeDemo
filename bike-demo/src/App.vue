@@ -47,18 +47,25 @@ function vailableRentBikesSort() {
 }
 
 function doSearch() {
+  current.value = 1
   showData.value = []
+  searchData.value = []
   if (searchStr.value == null || searchStr.value == '') {
     showData.value = dataArray.value
     pages.value = Math.ceil(showData.value.length / 20)
+    doChangePage()
   } else {
     for (let i = 0; i < dataArray.value.length; i++) {
       if (dataArray.value[i].ar.includes(searchStr.value)) {
         searchData.value.push(dataArray.value[i])
       }
     }
+    console.log(searchData.value.length)
     pages.value = Math.ceil(searchData.value.length / 20)
     for (let i = 0; i < 20; i++) {
+      if (i >= searchData.value.length) {
+        break
+      }
       showData.value.push(searchData.value[i])
     }
   }
@@ -70,10 +77,16 @@ function doChangePage() {
   //判斷是否有搜尋條件，選擇要抓searchData還是dataArray
   if (searchStr.value == null || searchStr.value == '') {
     for (let i = prevIndex; i < index; i++) {
+      if (i >= dataArray.value.length) {
+        break
+      }
       showData.value.push(dataArray.value[i])
     }
   } else {
     for (let i = prevIndex; i < index; i++) {
+      if (i >= searchData.value.length) {
+        break
+      }
       showData.value.push(searchData.value[i])
     }
   }
@@ -81,58 +94,64 @@ function doChangePage() {
 </script>
 
 <template>
-  <Paginate
-    class="justify-content-center"
-    first-button-text="&lt;&lt;"
-    last-button-text="&gt;&gt;"
-    prev-text="&lt;"
-    next-text="&gt;"
-    :page-count="pages"
-    :initial-page="current"
-    v-model="current"
-    :click-handler="doChangePage"
-    :first-last-button="true"
-  ></Paginate>
-  <div class="input-group input-group-sm mb-1" style="padding: 1%">
-    <span class="input-group-text" id="inputGroup-sizing-sm">搜尋</span>
-    <input
-      v-model="searchStr"
-      type="text"
-      class="form-control"
-      aria-label="Sizing example input"
-      aria-describedby="inputGroup-sizing-sm"
-    />
-    <button @click="doSearch">search</button>
-  </div>
+  <nav class="navbar navbar-expand-lg bg-body-tertiary" style="padding-top: 2%">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Bike Demo</a>
 
-  <table class="table table-hover">
-    <thead>
-      <tr class="table-primary">
-        <th scope="col">站點編號</th>
-        <th scope="col">站點名稱</th>
-        <th scope="col">站點所在區域</th>
-        <th scope="col">站點地址</th>
-        <th @click="totalSort" scope="col">總車位數量(排序)</th>
-        <th @click="vailableRentBikesSort" scope="col">可租借的腳踏車數量(排序)</th>
-        <th scope="col">站點緯度</th>
-        <th scope="col">站點經度</th>
-        <th scope="col">可歸還的腳踏車數量</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="data in showData" :key="data">
-        <th scope="row">{{ data.sno }}</th>
-        <td>{{ data.sna }}</td>
-        <td>{{ data.sarea }}</td>
-        <td>{{ data.ar }}</td>
-        <td>{{ data.total }}</td>
-        <td>{{ data.available_rent_bikes }}</td>
-        <td>{{ data.latitude }}</td>
-        <td>{{ data.longitude }}</td>
-        <td>{{ data.available_return_bikes }}</td>
-      </tr>
-    </tbody>
-  </table>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <input
+          class="form-control me-2"
+          placeholder="Search"
+          v-model="searchStr"
+          aria-label="Search"
+        />
+        <button class="btn btn-outline-success" @click="doSearch">Search</button>
+      </div>
+    </div>
+  </nav>
+  <div style="padding: 2%">
+    <Paginate
+      class="justify-content-center"
+      first-button-text="&lt;&lt;"
+      last-button-text="&gt;&gt;"
+      prev-text="&lt;"
+      next-text="&gt;"
+      :page-count="pages"
+      :initial-page="current"
+      v-model="current"
+      :click-handler="doChangePage"
+      :first-last-button="true"
+    ></Paginate>
+
+    <table class="table table-hover">
+      <thead>
+        <tr class="table-primary">
+          <th scope="col">站點編號</th>
+          <th scope="col">站點名稱</th>
+          <th scope="col">站點所在區域</th>
+          <th scope="col">站點地址</th>
+          <th @click="totalSort" scope="col">總車位數量(排序)</th>
+          <th @click="vailableRentBikesSort" scope="col">可租借的腳踏車數量(排序)</th>
+          <th scope="col">站點緯度</th>
+          <th scope="col">站點經度</th>
+          <th scope="col">可歸還的腳踏車數量</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="data in showData" :key="data">
+          <th scope="row">{{ data.sno }}</th>
+          <td>{{ data.sna }}</td>
+          <td>{{ data.sarea }}</td>
+          <td>{{ data.ar }}</td>
+          <td>{{ data.total }}</td>
+          <td>{{ data.available_rent_bikes }}</td>
+          <td>{{ data.latitude }}</td>
+          <td>{{ data.longitude }}</td>
+          <td>{{ data.available_return_bikes }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </template>
 
 <style scoped></style>
