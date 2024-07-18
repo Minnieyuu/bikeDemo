@@ -52,16 +52,27 @@ function doSearch() {
   searchData.value = []
 
   if (searchStr.value == null || searchStr.value == '') {
-    console.log(showData.value)
-    console.log(searchData.value)
-    showData.value = dataArray.value
+    dataArray.value = []
+    axios
+      .get('https://tcgbusfs.blob.core.windows.net/dotapp/youbike/v2/youbike_immediate.json')
+      .then(function (res) {
+        for (let i = 0; i < res.data.length; i++) {
+          dataArray.value.push(res.data[i])
+        }
+        for (let i = 0; i < 20; i++) {
+          showData.value.push(dataArray.value[i])
+        }
 
-    pages.value = Math.ceil(showData.value.length / 20)
+        pages.value = Math.ceil(dataArray.value.length / 20)
+      })
+      .catch(function (error) {
+        console.log(error)
+      })
     doChangePage()
   } else {
+    searchStr.value = searchStr.value.trim()
     for (let i = 0; i < dataArray.value.length; i++) {
       if (dataArray.value[i].ar.includes(searchStr.value)) {
-        console.log(dataArray.value[i])
         searchData.value.push(dataArray.value[i])
       }
     }
@@ -87,6 +98,7 @@ function doSearch() {
 
       searchData.value[i].ar = str
     }
+
     pages.value = Math.ceil(searchData.value.length / 20)
 
     for (let i = 0; i < 20; i++) {
@@ -108,6 +120,7 @@ function doChangePage() {
       if (i >= dataArray.value.length) {
         break
       }
+
       showData.value.push(dataArray.value[i])
     }
   } else {
@@ -128,6 +141,7 @@ function doChangePage() {
 
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <input
+          @change="doSearch"
           class="form-control me-2"
           placeholder="Search"
           v-model="searchStr"
