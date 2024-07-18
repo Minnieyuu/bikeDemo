@@ -8,8 +8,8 @@ const searchData = ref([])
 const searchStr = ref('')
 const pages = ref(10)
 const current = ref(1)
-const sortStr = ref('無排序')
-const sortStr2 = ref('無排序')
+const sortStr = ref('*️⃣')
+const sortStr2 = ref('*️⃣')
 
 //取得api資料
 axios
@@ -32,13 +32,13 @@ function totalSort() {
   if (showData.value[0].total > showData.value[1].total) {
     //小到大
     showData.value.sort((a, b) => a.total - b.total)
-    sortStr.value = '由小到大'
-    sortStr2.value = '無排序'
+    sortStr.value = '🔼'
+    sortStr2.value = '*️⃣'
   } else {
     //大到小
     showData.value.sort((a, b) => b.total - a.total)
-    sortStr.value = '由大到小'
-    sortStr2.value = '無排序'
+    sortStr.value = '🔽'
+    sortStr2.value = '*️⃣'
   }
 }
 
@@ -46,19 +46,19 @@ function vailableRentBikesSort() {
   if (showData.value[0].available_rent_bikes > showData.value[1].available_rent_bikes) {
     //小到大
     showData.value.sort((a, b) => a.available_rent_bikes - b.available_rent_bikes)
-    sortStr2.value = '由小到大'
-    sortStr.value = '無排序'
+    sortStr2.value = '🔼'
+    sortStr.value = '*️⃣'
   } else {
     //大到小
     showData.value.sort((a, b) => b.available_rent_bikes - a.available_rent_bikes)
-    sortStr2.value = '由大到小'
-    sortStr.value = '無排序'
+    sortStr2.value = '🔽'
+    sortStr.value = '*️⃣'
   }
 }
 
 function doSearch() {
-  sortStr2.value = '無排序'
-  sortStr.value = '無排序'
+  sortStr2.value = '*️⃣'
+  sortStr.value = '*️⃣'
   current.value = 1
   showData.value = []
   searchData.value = []
@@ -100,11 +100,9 @@ function doSearch() {
       let str =
         '<span>' +
         frontStr +
-        '</span>' +
-        ' <span style="color:	#FF0000">' +
+        '</span> <span style="color:	#FF0000">' +
         Redstr +
-        '</span>' +
-        '<span>' +
+        '</span><span>' +
         backStr +
         '</span>'
 
@@ -123,8 +121,8 @@ function doSearch() {
   }
 }
 function doChangePage() {
-  sortStr2.value = '無排序'
-  sortStr.value = '無排序'
+  sortStr2.value = '*️⃣'
+  sortStr.value = '*️⃣'
   showData.value = []
   const prevIndex = 20 + (current.value - 2) * 20
   const index = 20 + (current.value - 1) * 20
@@ -149,8 +147,15 @@ function doChangePage() {
 </script>
 
 <template>
-  <nav class="navbar navbar-expand-lg bg-body-tertiary" style="padding-top: 2%">
+  <nav class="navbar navbar-expand-lg bg-body-tertiary">
     <div class="container-fluid">
+      <img
+        style="padding: 2px"
+        src="/src/assets/photo/bikeIcon.png"
+        alt=""
+        width="40"
+        height="40"
+      />
       <a class="navbar-brand" href="#">Bike Demo</a>
 
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
@@ -166,19 +171,6 @@ function doChangePage() {
     </div>
   </nav>
   <div style="padding: 2%">
-    <Paginate
-      class="justify-content-center"
-      first-button-text="&lt;&lt;"
-      last-button-text="&gt;&gt;"
-      prev-text="&lt;"
-      next-text="&gt;"
-      :page-count="pages"
-      :initial-page="current"
-      v-model="current"
-      :click-handler="doChangePage"
-      :first-last-button="true"
-    ></Paginate>
-
     <table class="table table-hover">
       <thead>
         <tr class="table-primary">
@@ -211,6 +203,18 @@ function doChangePage() {
         </tr>
       </tbody>
     </table>
+    <Paginate
+      class="justify-content-center"
+      first-button-text="&lt;&lt;"
+      last-button-text="&gt;&gt;"
+      prev-text="&lt;"
+      next-text="&gt;"
+      :page-count="pages"
+      :initial-page="current"
+      v-model="current"
+      :click-handler="doChangePage"
+      :first-last-button="true"
+    ></Paginate>
   </div>
 </template>
 
