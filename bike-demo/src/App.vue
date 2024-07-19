@@ -1,146 +1,134 @@
 <script setup>
-import { ref } from 'vue'
-import axios from 'axios'
-import Paginate from 'vuejs-paginate-next'
-const dataArray = ref([])
-const showData = ref([])
-const searchData = ref([])
-const searchStr = ref('')
-const pages = ref(10)
-const current = ref(1)
-const sortStr = ref('*️⃣')
-const sortStr2 = ref('*️⃣')
+import { ref } from 'vue';
+import axios from 'axios';
+import Paginate from 'vuejs-paginate-next';
+const dataArray = ref([]);
+const showData = ref([]);
+const searchData = ref([]);
+const searchStr = ref('');
+const pages = ref(10);
+const current = ref(1);
+const sortStr = ref('*️⃣');
+const sortStr2 = ref('*️⃣');
+const isShowTd = ref(false);
 
 //取得api資料
 axios
   .get('https://tcgbusfs.blob.core.windows.net/dotapp/youbike/v2/youbike_immediate.json')
   .then(function (res) {
-    for (let i = 0; i < res.data.length; i++) {
-      dataArray.value.push(res.data[i])
-    }
-    for (let i = 0; i < 20; i++) {
-      showData.value.push(dataArray.value[i])
-    }
+    dataArray.value = res.data;
 
-    pages.value = Math.ceil(dataArray.value.length / 20)
+    for (let i = 0; i < 20; i++) {
+      showData.value.push(dataArray.value[i]);
+    }
+    pages.value = Math.ceil(dataArray.value.length / 20);
   })
   .catch(function (error) {
-    console.log(error)
-  })
+    console.log(error);
+  });
 
 function totalSort() {
-  if (showData.value[0].total > showData.value[1].total) {
+  //第一次排序，由小到大
+  if (sortStr.value == '*️⃣' || sortStr.value == '🔽') {
+    console.log('小到大');
     //小到大
-    showData.value.sort((a, b) => a.total - b.total)
-    sortStr.value = '🔼'
-    sortStr2.value = '*️⃣'
+    dataArray.value.sort((a, b) => a.total - b.total);
+    showData.value = dataArray.value;
+    sortStr.value = '🔼';
+    sortStr2.value = '*️⃣';
+
+    //排序完，如果有查詢input有資料，再查詢一次
+    if (searchStr.value) {
+      doSearch();
+    }
   } else {
     //大到小
-    showData.value.sort((a, b) => b.total - a.total)
-    sortStr.value = '🔽'
-    sortStr2.value = '*️⃣'
+    console.log('大到小');
+    dataArray.value.sort((a, b) => b.total - a.total);
+    showData.value = dataArray.value;
+    sortStr.value = '🔽';
+    sortStr2.value = '*️⃣';
+    //排序完，如果有查詢input有資料，再查詢一次
+    if (searchStr.value) {
+      doSearch();
+    }
   }
+  //分頁
+  doChangePage();
 }
 
 function vailableRentBikesSort() {
-  if (showData.value[0].available_rent_bikes > showData.value[1].available_rent_bikes) {
+  //第一次排序，由小到大
+  if (sortStr2.value == '*️⃣' || sortStr2.value == '🔽') {
+    console.log('小到大');
     //小到大
-    showData.value.sort((a, b) => a.available_rent_bikes - b.available_rent_bikes)
-    sortStr2.value = '🔼'
-    sortStr.value = '*️⃣'
+    dataArray.value.sort((a, b) => a.available_rent_bikes - b.available_rent_bikes);
+    showData.value = dataArray.value;
+    sortStr2.value = '🔼';
+    sortStr.value = '*️⃣';
+
+    //排序完，如果有查詢input有資料，再查詢一次
+    if (searchStr.value) {
+      doSearch();
+    }
   } else {
     //大到小
-    showData.value.sort((a, b) => b.available_rent_bikes - a.available_rent_bikes)
-    sortStr2.value = '🔽'
-    sortStr.value = '*️⃣'
+    console.log('大到小');
+    dataArray.value.sort((a, b) => b.available_rent_bikes - a.available_rent_bikes);
+    showData.value = dataArray.value;
+    sortStr2.value = '🔽';
+    sortStr.value = '*️⃣';
+    //排序完，如果有查詢input有資料，再查詢一次
+    if (searchStr.value) {
+      doSearch();
+    }
   }
+  //分頁
+  doChangePage();
 }
 
 function doSearch() {
-  sortStr2.value = '*️⃣'
-  sortStr.value = '*️⃣'
-  current.value = 1
-  showData.value = []
-  searchData.value = []
-
+  showData.value = [];
+  searchData.value = [];
   if (searchStr.value == null || searchStr.value == '') {
-    dataArray.value = []
-    axios
-      .get('https://tcgbusfs.blob.core.windows.net/dotapp/youbike/v2/youbike_immediate.json')
-      .then(function (res) {
-        for (let i = 0; i < res.data.length; i++) {
-          dataArray.value.push(res.data[i])
-        }
-        for (let i = 0; i < 20; i++) {
-          showData.value.push(dataArray.value[i])
-        }
-
-        pages.value = Math.ceil(dataArray.value.length / 20)
-      })
-      .catch(function (error) {
-        console.log(error)
-      })
-    doChangePage()
+    isShowTd.value = false;
+    showData.value = dataArray.value;
+    pages.value = Math.ceil(dataArray.value.length / 20);
   } else {
-    searchStr.value = searchStr.value.trim()
-    for (let i = 0; i < dataArray.value.length; i++) {
-      if (dataArray.value[i].ar.includes(searchStr.value)) {
-        searchData.value.push(dataArray.value[i])
-      }
-    }
+    isShowTd.value = true;
+    searchStr.value = searchStr.value.trim();
 
-    for (let i = 0; i < searchData.value.length; i++) {
-      let idx = searchData.value[i].ar.indexOf(searchStr.value)
-      let Redstr = searchData.value[i].ar.substr(idx, searchStr.value.length)
-      let frontStr = searchData.value[i].ar.substr(0, idx)
-      let backStr = searchData.value[i].ar.substr(
-        idx + searchStr.value.length,
-        searchData.value[i].ar.length
-      )
-      let str =
-        '<span>' +
-        frontStr +
-        '</span> <span style="color:	#FF0000">' +
-        Redstr +
-        '</span><span>' +
-        backStr +
-        '</span>'
+    searchData.value = dataArray.value.filter((data) => data.ar.includes(searchStr.value));
 
-      searchData.value[i].ar = str
-    }
-
-    pages.value = Math.ceil(searchData.value.length / 20)
-
+    pages.value = Math.ceil(searchData.value.length / 20);
+    current.value = current.value > pages.value ? pages.value : current.value;
     for (let i = 0; i < 20; i++) {
       if (i >= searchData.value.length) {
-        break
+        break;
       }
 
-      showData.value.push(searchData.value[i])
+      showData.value.push(searchData.value[i]);
     }
   }
+  doChangePage();
 }
+
 function doChangePage() {
-  sortStr2.value = '*️⃣'
-  sortStr.value = '*️⃣'
-  showData.value = []
-  const prevIndex = 20 + (current.value - 2) * 20
-  const index = 20 + (current.value - 1) * 20
+  showData.value = [];
+  const prevIndex = 20 + (current.value - 2) * 20;
+  const index = 20 + (current.value - 1) * 20;
   //判斷是否有搜尋條件，選擇要抓searchData還是dataArray
   if (searchStr.value == null || searchStr.value == '') {
-    for (let i = prevIndex; i < index; i++) {
-      if (i >= dataArray.value.length) {
-        break
-      }
-
-      showData.value.push(dataArray.value[i])
+    if (index > dataArray.value.length) {
+      showData.value = dataArray.value.slice(prevIndex, dataArray.value.length);
+    } else {
+      showData.value = dataArray.value.slice(prevIndex, index);
     }
   } else {
-    for (let i = prevIndex; i < index; i++) {
-      if (i >= searchData.value.length) {
-        break
-      }
-      showData.value.push(searchData.value[i])
+    if (index > searchData.value.length) {
+      showData.value = searchData.value.slice(prevIndex, dataArray.value.length);
+    } else {
+      showData.value = searchData.value.slice(prevIndex, index);
     }
   }
 }
@@ -156,7 +144,7 @@ function doChangePage() {
         width="40"
         height="40"
       />
-      <a class="navbar-brand" href="#">Bike Demo</a>
+      <a class="navbar-brand" href="#" style="padding-left: 5px">Bike Demo</a>
 
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <input
@@ -170,7 +158,7 @@ function doChangePage() {
       </div>
     </div>
   </nav>
-  <div style="padding: 2%">
+  <div style="padding-top: 10px">
     <table class="table table-hover">
       <thead>
         <tr class="table-primary">
@@ -194,7 +182,16 @@ function doChangePage() {
           <th scope="row">{{ data.sno }}</th>
           <td>{{ data.sna }}</td>
           <td>{{ data.sarea }}</td>
-          <td v-html="data.ar"></td>
+          <td v-show="!isShowTd">{{ data.ar }}</td>
+          <td v-show="isShowTd">
+            <span>{{ data.ar.substr(0, data.ar.indexOf(searchStr)) }}</span
+            ><span style="color: red">{{
+              data.ar.substr(data.ar.indexOf(searchStr), searchStr.length)
+            }}</span
+            ><span>{{
+              data.ar.substr(data.ar.indexOf(searchStr) + searchStr.length, data.ar.length)
+            }}</span>
+          </td>
           <td>{{ data.total }}</td>
           <td>{{ data.available_rent_bikes }}</td>
           <td>{{ data.latitude }}</td>
