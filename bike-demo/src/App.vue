@@ -92,7 +92,7 @@ function doSearch() {
   searchData.value = [];
   if (searchStr.value == null || searchStr.value == '') {
     isShowTd.value = false;
-    showData.value = dataArray.value;
+    // showData.value = dataArray.value;
     pages.value = Math.ceil(dataArray.value.length / 20);
   } else {
     isShowTd.value = true;
@@ -102,18 +102,19 @@ function doSearch() {
 
     pages.value = Math.ceil(searchData.value.length / 20);
     current.value = current.value > pages.value ? pages.value : current.value;
-    for (let i = 0; i < 20; i++) {
-      if (i >= searchData.value.length) {
-        break;
-      }
+    // for (let i = 0; i < 20; i++) {
+    //   if (i >= searchData.value.length) {
+    //     break;
+    //   }
 
-      showData.value.push(searchData.value[i]);
-    }
+    //   showData.value.push(searchData.value[i]);
+    // }
   }
   doChangePage();
 }
 
 function doChangePage() {
+  current.value = current.value == 0 ? 1 : current.value;
   showData.value = [];
   const prevIndex = 20 + (current.value - 2) * 20;
   const index = 20 + (current.value - 1) * 20;
