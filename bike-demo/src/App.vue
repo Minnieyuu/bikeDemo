@@ -1,136 +1,114 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import axios from 'axios';
 import Paginate from 'vuejs-paginate-next';
+
 const dataArray = ref([]);
 const showData = ref([]);
-const searchData = ref([]);
+const filterData = ref([]);
 const searchStr = ref('');
-const pages = ref(10);
 const current = ref(1);
 const sortStr = ref('*️⃣');
 const sortStr2 = ref('*️⃣');
 const isShowTd = ref(false);
 
 //取得api資料
-axios
-  .get('https://tcgbusfs.blob.core.windows.net/dotapp/youbike/v2/youbike_immediate.json')
-  .then(function (res) {
-    dataArray.value = res.data;
+onMounted(async () => {
+  const response = await axios.get(
+    'https://tcgbusfs.blob.core.windows.net/dotapp/youbike/v2/youbike_immediate.json'
+  );
+  dataArray.value = JSON.parse(JSON.stringify(response.data));
+  //filterData初始值
+  filterData.value = JSON.parse(JSON.stringify(response.data));
+});
 
-    for (let i = 0; i < 20; i++) {
-      showData.value.push(dataArray.value[i]);
+//計算頁數
+const pages = computed(() => Math.ceil(filterData.value.length / 20));
+
+watch(
+  () => filterData.value,
+  () => {
+    console.log('doWatch');
+
+    showData.value = [];
+    //啟始點
+    const prevIndex = 20 + (current.value - 2) * 20;
+    //結束點
+    const index = 20 + (current.value - 1) * 20;
+    //如果結束點超過陣列長度，取陣列長度
+    if (index > dataArray.value.length) {
+      showData.value = [...filterData.value.slice(prevIndex, filterData.value.length)];
+    } else {
+      showData.value = [...filterData.value.slice(prevIndex, index)];
     }
-    pages.value = Math.ceil(dataArray.value.length / 20);
-  })
-  .catch(function (error) {
-    console.log(error);
-  });
+    console.log(showData.value);
+  }
+);
+
+watch(
+  () => current.value,
+  () => {
+    showData.value = [];
+    const prevIndex = 20 + (current.value - 2) * 20;
+    const index = 20 + (current.value - 1) * 20;
+
+    if (index > dataArray.value.length) {
+      showData.value = [...filterData.value.slice(prevIndex, filterData.value.length)];
+    } else {
+      showData.value = [...filterData.value.slice(prevIndex, index)];
+    }
+  }
+);
 
 function totalSort() {
-  //第一次排序，由小到大
   if (sortStr.value == '*️⃣' || sortStr.value == '🔽') {
     console.log('小到大');
     //小到大
-    dataArray.value.sort((a, b) => a.total - b.total);
-    showData.value = dataArray.value;
+    filterData.value = [...filterData.value.sort((a, b) => a.total - b.total)];
     sortStr.value = '🔼';
     sortStr2.value = '*️⃣';
-
-    //排序完，如果有查詢input有資料，再查詢一次
-    if (searchStr.value) {
-      doSearch();
-    }
   } else {
     //大到小
     console.log('大到小');
-    dataArray.value.sort((a, b) => b.total - a.total);
-    showData.value = dataArray.value;
+    filterData.value = [...filterData.value.sort((a, b) => b.total - a.total)];
     sortStr.value = '🔽';
     sortStr2.value = '*️⃣';
-    //排序完，如果有查詢input有資料，再查詢一次
-    if (searchStr.value) {
-      doSearch();
-    }
   }
-  //分頁
-  doChangePage();
 }
 
 function vailableRentBikesSort() {
-  //第一次排序，由小到大
   if (sortStr2.value == '*️⃣' || sortStr2.value == '🔽') {
     console.log('小到大');
     //小到大
-    dataArray.value.sort((a, b) => a.available_rent_bikes - b.available_rent_bikes);
-    showData.value = dataArray.value;
+    filterData.value = [
+      ...filterData.value.sort((a, b) => a.available_rent_bikes - b.available_rent_bikes)
+    ];
     sortStr2.value = '🔼';
     sortStr.value = '*️⃣';
-
-    //排序完，如果有查詢input有資料，再查詢一次
-    if (searchStr.value) {
-      doSearch();
-    }
   } else {
     //大到小
     console.log('大到小');
-    dataArray.value.sort((a, b) => b.available_rent_bikes - a.available_rent_bikes);
-    showData.value = dataArray.value;
+    filterData.value = [
+      ...filterData.value.sort((a, b) => b.available_rent_bikes - a.available_rent_bikes)
+    ];
     sortStr2.value = '🔽';
     sortStr.value = '*️⃣';
-    //排序完，如果有查詢input有資料，再查詢一次
-    if (searchStr.value) {
-      doSearch();
-    }
   }
-  //分頁
-  doChangePage();
 }
 
 function doSearch() {
   showData.value = [];
-  searchData.value = [];
+  filterData.value = [];
   if (searchStr.value == null || searchStr.value == '') {
     isShowTd.value = false;
-    // showData.value = dataArray.value;
-    pages.value = Math.ceil(dataArray.value.length / 20);
+    filterData.value = JSON.parse(JSON.stringify(dataArray.value));
   } else {
     isShowTd.value = true;
     searchStr.value = searchStr.value.trim();
-
-    searchData.value = dataArray.value.filter((data) => data.ar.includes(searchStr.value));
-
-    pages.value = Math.ceil(searchData.value.length / 20);
-    current.value = current.value > pages.value ? pages.value : current.value;
-    // for (let i = 0; i < 20; i++) {
-    //   if (i >= searchData.value.length) {
-    //     break;
-    //   }
-
-    //   showData.value.push(searchData.value[i]);
-    // }
-  }
-  doChangePage();
-}
-
-function doChangePage() {
-  current.value = current.value == 0 ? 1 : current.value;
-  showData.value = [];
-  const prevIndex = 20 + (current.value - 2) * 20;
-  const index = 20 + (current.value - 1) * 20;
-  //判斷是否有搜尋條件，選擇要抓searchData還是dataArray
-  if (searchStr.value == null || searchStr.value == '') {
-    if (index > dataArray.value.length) {
-      showData.value = dataArray.value.slice(prevIndex, dataArray.value.length);
-    } else {
-      showData.value = dataArray.value.slice(prevIndex, index);
-    }
-  } else {
-    if (index > searchData.value.length) {
-      showData.value = searchData.value.slice(prevIndex, dataArray.value.length);
-    } else {
-      showData.value = searchData.value.slice(prevIndex, index);
-    }
+    filterData.value = JSON.parse(
+      JSON.stringify(dataArray.value.filter((data) => data.ar.includes(searchStr.value)))
+    );
+    current.value = 1;
   }
 }
 </script>
@@ -210,7 +188,6 @@ function doChangePage() {
       :page-count="pages"
       :initial-page="current"
       v-model="current"
-      :click-handler="doChangePage"
       :first-last-button="true"
     ></Paginate>
   </div>
